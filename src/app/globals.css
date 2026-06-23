@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+html,
+body {
+  background-color: #ffffff;
+  color: #0a0a0a;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Halftone dot texture - pouziva se jako podklad pro panely/hero */
+.halftone {
+  background-image: radial-gradient(#0a0a0a 1.1px, transparent 1.1px);
+  background-size: 9px 9px;
+  background-position: 0 0;
+}
+
+.halftone-dim {
+  background-image: radial-gradient(#0a0a0a 1px, transparent 1px);
+  background-size: 12px 12px;
+  opacity: 0.07;
+}
+
+/* Tlusty komiksovy ramecek s tvrdym stinem */
+.comic-panel {
+  border: 3px solid #0a0a0a;
+  background: #ffffff;
+  box-shadow: 5px 5px 0 0 #0a0a0a;
+}
+
+.comic-panel-tight {
+  border: 2px solid #0a0a0a;
+  box-shadow: 3px 3px 0 0 #0a0a0a;
+}
+
+/* "POW" burst badge pro body */
+.burst {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.burst svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.burst span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Scoreboard - flip-style digit look */
+.scoreboard-num {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-comic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 3px solid #0a0a0a;
+  background: #0a0a0a;
+  color: #ffffff;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.65rem 1.4rem;
+  box-shadow: 4px 4px 0 0 #0a0a0a;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-comic:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #0a0a0a;
+}
+
+.btn-comic:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 #0a0a0a;
+}
+
+.btn-comic-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 3px solid #0a0a0a;
+  background: #ffffff;
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.65rem 1.4rem;
+  box-shadow: 4px 4px 0 0 #0a0a0a;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-comic-outline:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #0a0a0a;
+}
+
+.input-comic {
+  border: 2px solid #0a0a0a;
+  background: #ffffff;
+  color: #0a0a0a;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-body);
+  width: 100%;
+}
+
+.input-comic:focus {
+  outline: 3px solid #0a0a0a;
+  outline-offset: 0;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid #0a0a0a;
+  padding: 0.15rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tag-filled {
+  background: #0a0a0a;
+  color: #ffffff;
+}

@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Pro produkci muzes zmenit na "postgresql" a upravit DATABASE_URL
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  GAME
+  IRL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  INSANE
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        Role         @default(USER)
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Week {
+  id          String       @id @default(cuid())
+  number      Int          @unique
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean      @default(true)
+  closedAt    DateTime?
+  submissions Submission[]
+
+  @@index([isActive])
+}
+
+model Challenge {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    Category
+  difficulty  Difficulty   @default(MEDIUM)
+  points      Int
+  isArchived  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId   String
+  challenge     Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  weekId        String
+  week          Week             @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  proofUrl      String
+  note          String?
+  status        SubmissionStatus @default(PENDING)
+  pointsAwarded Int?
+  reviewNote    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime         @default(now())
+
+  @@unique([userId, challengeId, weekId])
+  @@index([weekId, status])
+  @@index([userId])
+}
