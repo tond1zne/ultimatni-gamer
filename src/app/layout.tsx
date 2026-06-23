@@ -34,8 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">{children}</main>
         <footer className="border-t-[3px] border-ink mt-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 font-mono text-xs text-steel flex flex-col sm:flex-row justify-between gap-2">
-            <span>ULTIMATE STREAMER CHALLENGE © {new Date().getFullYear()}</span>
-            <span>Body se uzaviraji kazdy tyden. Hraj, dokazuj, stoupej v zebricku.</span>
+            <span>TOND1ZNE ULTIMÁTNÍ GAMER © {new Date().getFullYear()}</span>
+            <span>Body se uzaviraji kazdy tyden. Hraj a stoupej v zebricku. By tond1zne</span>
           </div>
         </footer>
       </body>
