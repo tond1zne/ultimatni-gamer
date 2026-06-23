@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { closeCurrentWeekAndStartNext } from "@/lib/week";
-import type { ActionResult } from "@/actions/auth";
 import { Category, Difficulty } from "@prisma/client";
 
 async function requireAdmin() {
@@ -16,16 +15,16 @@ async function requireAdmin() {
   return session;
 }
 
-export async function approveSubmission(formData: FormData): Promise<ActionResult> {
+export async function approveSubmission(formData: FormData): Promise<void> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
   const pointsRaw = String(formData.get("points") || "");
   const points = Number(pointsRaw);
 
-  if (!submissionId) return { ok: false, error: "Chybi submission." };
+  if (!submissionId) throw new Error("Chybi submission.");
   if (!Number.isFinite(points) || points < 0) {
-    return { ok: false, error: "Body musi byt cislo >= 0." };
+    throw new Error("Body musi byt cislo >= 0.");
   }
 
   await prisma.submission.update({
@@ -41,17 +40,15 @@ export async function approveSubmission(formData: FormData): Promise<ActionResul
   revalidatePath("/admin/submissions");
   revalidatePath("/leaderboard");
   revalidatePath("/profile");
-
-  return { ok: true };
 }
 
-export async function rejectSubmission(formData: FormData): Promise<ActionResult> {
+export async function rejectSubmission(formData: FormData): Promise<void> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
   const reviewNote = String(formData.get("reviewNote") || "").trim();
 
-  if (!submissionId) return { ok: false, error: "Chybi submission." };
+  if (!submissionId) throw new Error("Chybi submission.");
 
   await prisma.submission.update({
     where: { id: submissionId },
@@ -65,8 +62,6 @@ export async function rejectSubmission(formData: FormData): Promise<ActionResult
 
   revalidatePath("/admin/submissions");
   revalidatePath("/profile");
-
-  return { ok: true };
 }
 
 export async function createChallenge(formData: FormData): Promise<void> {
@@ -78,32 +73,38 @@ export async function createChallenge(formData: FormData): Promise<void> {
   const difficulty = String(formData.get("difficulty") || "") as Difficulty;
   const points = Number(formData.get("points") || 0);
 
-  if (!title) return { ok: false, error: "Zadej nazev vyzvy." };
-  if (!description) return { ok: false, error: "Zadej popis vyzvy." };
-  if (!["GAME", "IRL"].includes(category)) return { ok: false, error: "Vyber kategorii." };
+  if (!title) throw new Error("Zadej nazev vyzvy.");
+  if (!description) throw new Error("Zadej popis vyzvy.");
+  if (!["GAME", "IRL"].includes(category)) throw new Error("Vyber kategorii.");
   if (!["EASY", "MEDIUM", "HARD", "INSANE"].includes(difficulty)) {
-    return { ok: false, error: "Vyber obtiznost." };
+    throw new Error("Vyber obtiznost.");
   }
   if (!Number.isFinite(points) || points <= 0) {
-    return { ok: false, error: "Body musi byt kladne cislo." };
+    throw new Error("Body musi byt kladne cislo.");
   }
 
   await prisma.challenge.create({
-    data: { title, description, category, difficulty, points: Math.round(points) },
+    data: {
+      title,
+      description,
+      category,
+      difficulty,
+      points: Math.round(points),
+    },
   });
 
   revalidatePath("/admin/challenges");
   revalidatePath("/challenges");
   revalidatePath("/");
-
 }
 
-export async function toggleArchiveChallenge(formData: FormData): Promise<ActionResult> {
+export async function toggleArchiveChallenge(formData: FormData): Promise<void> {
   await requireAdmin();
 
   const challengeId = String(formData.get("challengeId") || "");
   const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
-  if (!challenge) return { ok: false, error: "Vyzva nenalezena." };
+
+  if (!challenge) throw new Error("Vyzva nenalezena.");
 
   await prisma.challenge.update({
     where: { id: challengeId },
@@ -113,16 +114,14 @@ export async function toggleArchiveChallenge(formData: FormData): Promise<Action
   revalidatePath("/admin/challenges");
   revalidatePath("/challenges");
   revalidatePath("/");
-
 }
 
-export async function closeWeek(): Promise<ActionResult> {
+export async function closeWeek(): Promise<void> {
   await requireAdmin();
+
   await closeCurrentWeekAndStartNext();
 
   revalidatePath("/");
   revalidatePath("/leaderboard");
   revalidatePath("/admin/week");
-
-  return { ok: true };
 }
