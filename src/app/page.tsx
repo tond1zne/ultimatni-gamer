@@ -34,7 +34,11 @@ if (!week) {
             Splň výzvu.
             <br />
             <br />
+            <br />
+            <br />
             Natoč důkaz.
+            <br />
+            <br />
             <br />
             <br />
             Sbírej body.
