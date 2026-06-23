@@ -12,7 +12,7 @@ export default async function Navbar() {
         <Link href="/" className="font-display text-xl sm:text-2xl tracking-tight uppercase">
           TOND1ZNE<span className="border-b-4 border-ink">ULTIMÁTNÍGAMER</span>
         </Link>
-          <link rel="icon" type="image/png" href="favicon.png">
+          <link rel="icon" type="fd825cb4-7d9a-49a1-aa51-b6659abba1b6.png" href="favicon.png">
         <nav className="hidden md:flex items-center gap-6 font-mono text-xs uppercase tracking-widest">
           <Link href="/challenges" className="hover:underline">
             Vyzvy
