@@ -8,6 +8,14 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const week = await getCurrentWeek();
+
+if (!week) {
+  return (
+    <div className="p-6">
+      Žádný aktivní týden zatím neexistuje.
+    </div>
+  );
+}
   const challenges = await prisma.challenge.findMany({
     where: { isArchived: false },
     orderBy: { points: "desc" },

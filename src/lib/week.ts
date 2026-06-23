@@ -4,10 +4,13 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Vrati aktivni tyden. Pokud uz vyprsel, automaticky ho uzavre a zalozi novy. */
 export async function getCurrentWeek() {
-  let week = await prisma.week.findFirst({ where: { isActive: true } });
+  let week = await prisma.week.findFirst({
+    where: { isActive: true },
+  });
 
+  // ❗ SAFE FALLBACK - DB je prázdná
   if (!week) {
-    week = await prisma.week.create({
+    return prisma.week.create({
       data: {
         number: 1,
         startsAt: new Date(),
@@ -15,23 +18,23 @@ export async function getCurrentWeek() {
         isActive: true,
       },
     });
-    return week;
   }
 
-  if (week.endsAt.getTime() <= Date.now()) {
+  // ❗ SAFE CHECK (nesmí spadnout na null date)
+  if (!week.endsAt || week.endsAt.getTime() <= Date.now()) {
     await prisma.week.update({
       where: { id: week.id },
       data: { isActive: false, closedAt: new Date() },
     });
-    const next = await prisma.week.create({
+
+    return prisma.week.create({
       data: {
-        number: week.number + 1,
+        number: (week.number ?? 1) + 1,
         startsAt: new Date(),
         endsAt: new Date(Date.now() + WEEK_MS),
         isActive: true,
       },
     });
-    return next;
   }
 
   return week;
