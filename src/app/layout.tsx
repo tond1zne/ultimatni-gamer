@@ -22,7 +22,7 @@ const mono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ultimate Streamer Challenge",
+  title: "TOND1ZNE ULTIMÁTNÍ GAMER",
   description: "Vyzvy ve hrach i v realnem zivote. Splni, nahraj dukaz, sbiraj body.",
 };
 
