@@ -69,7 +69,7 @@ export async function rejectSubmission(formData: FormData): Promise<ActionResult
   return { ok: true };
 }
 
-export async function createChallenge(formData: FormData): Promise<ActionResult> {
+export async function createChallenge(formData: FormData): Promise<void> {
   await requireAdmin();
 
   const title = String(formData.get("title") || "").trim();
