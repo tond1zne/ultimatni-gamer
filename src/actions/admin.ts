@@ -96,7 +96,6 @@ export async function createChallenge(formData: FormData): Promise<ActionResult>
   revalidatePath("/challenges");
   revalidatePath("/");
 
-  return { ok: true };
 }
 
 export async function toggleArchiveChallenge(formData: FormData): Promise<ActionResult> {
@@ -115,7 +114,6 @@ export async function toggleArchiveChallenge(formData: FormData): Promise<Action
   revalidatePath("/challenges");
   revalidatePath("/");
 
-  return { ok: true };
 }
 
 export async function closeWeek(): Promise<ActionResult> {
