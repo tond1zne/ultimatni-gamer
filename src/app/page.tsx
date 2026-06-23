@@ -33,7 +33,9 @@ if (!week) {
           <h1 className="font-display text-4xl sm:text-6xl uppercase leading-[0.95] max-w-3xl">
             Splň výzvu.
             <br />
+            <br />
             Natoč důkaz.
+            <br />
             <br />
             Sbírej body.
           </h1>
