@@ -1,62 +1,78 @@
 import { prisma } from "@/lib/prisma";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Vrati aktivni tyden. Pokud uz vyprsel, automaticky ho uzavre a zalozi novy. */
-export async function getCurrentWeek() {
-  let week = await prisma.week.findFirst({
-    where: { isActive: true },
-  });
-
-  // ❗ SAFE FALLBACK - DB je prázdná
-  if (!week) {
-    return prisma.week.create({
-      data: {
-        number: 1,
-        startsAt: new Date(),
-        endsAt: new Date(Date.now() + WEEK_MS),
-        isActive: true,
-      },
+/** Najde/vytvori "pripravovany" tyden, ktery jeste nebyl spusten (bez startsAt/endsAt). */
+async function ensurePendingWeek() {
+  let pending = await prisma.week.findFirst({ where: { status: "PENDING" } });
+  if (!pending) {
+    const last = await prisma.week.findFirst({ orderBy: { number: "desc" } });
+    pending = await prisma.week.create({
+      data: { number: (last?.number ?? 0) + 1, status: "PENDING" },
     });
   }
-
-  // ❗ SAFE CHECK (nesmí spadnout na null date)
-  if (!week.endsAt || week.endsAt.getTime() <= Date.now()) {
-    await prisma.week.update({
-      where: { id: week.id },
-      data: { isActive: false, closedAt: new Date() },
-    });
-
-    return prisma.week.create({
-      data: {
-        number: (week.number ?? 1) + 1,
-        startsAt: new Date(),
-        endsAt: new Date(Date.now() + WEEK_MS),
-        isActive: true,
-      },
-    });
-  }
-
-  return week;
+  return pending;
 }
 
-export async function closeCurrentWeekAndStartNext() {
-  const week = await prisma.week.findFirst({ where: { isActive: true } });
-  if (week) {
+export type WeekState = {
+  active: Awaited<ReturnType<typeof prisma.week.findFirst>> | null;
+  pending: Awaited<ReturnType<typeof prisma.week.findFirst>> | null;
+};
+
+/**
+ * Vrati aktualni stav tydne:
+ * - active: bezici tyden s casovacem (nebo null, pokud admin jeste nic nespustil / tyden vyprsel)
+ * - pending: tyden pripraveny ke spusteni adminem (existuje jen kdyz active === null)
+ * Pokud aktivnimu tydnu vyprsel cas, automaticky se uzavre (ale dalsi se NESPOUSTI automaticky).
+ */
+export async function getWeekState(): Promise<WeekState> {
+  const active = await prisma.week.findFirst({ where: { status: "ACTIVE" } });
+
+  if (active && active.endsAt && active.endsAt.getTime() <= Date.now()) {
     await prisma.week.update({
-      where: { id: week.id },
-      data: { isActive: false, closedAt: new Date() },
+      where: { id: active.id },
+      data: { status: "CLOSED", closedAt: new Date() },
     });
+    const pending = await ensurePendingWeek();
+    return { active: null, pending };
   }
-  const nextNumber = week ? week.number + 1 : 1;
-  return prisma.week.create({
+
+  if (active) {
+    return { active, pending: null };
+  }
+
+  const pending = await ensurePendingWeek();
+  return { active: null, pending };
+}
+
+/** Admin rucne spusti pripraveny tyden - od tohoto okamziku bezi casovac. */
+export async function startWeek(weekId: string, days = 7) {
+  const alreadyActive = await prisma.week.findFirst({ where: { status: "ACTIVE" } });
+  if (alreadyActive) {
+    throw new Error("Už běží aktivní týden – nejdřív ho uzavři.");
+  }
+
+  const now = new Date();
+  return prisma.week.update({
+    where: { id: weekId },
     data: {
-      number: nextNumber,
-      startsAt: new Date(),
-      endsAt: new Date(Date.now() + WEEK_MS),
-      isActive: true,
+      status: "ACTIVE",
+      startsAt: now,
+      endsAt: new Date(now.getTime() + days * DAY_MS),
     },
   });
+}
+
+/** Admin rucne predcasne uzavre aktivni tyden. Novy tyden se vytvori jako "pending" (nespusti se sam). */
+export async function closeActiveWeekNow() {
+  const active = await prisma.week.findFirst({ where: { status: "ACTIVE" } });
+  if (active) {
+    await prisma.week.update({
+      where: { id: active.id },
+      data: { status: "CLOSED", closedAt: new Date() },
+    });
+  }
+  return ensurePendingWeek();
 }
 
 export type LeaderboardRow = {

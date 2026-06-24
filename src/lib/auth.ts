@@ -26,6 +26,12 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) return null;
 
+        if (!user.emailVerified) {
+          throw new Error(
+            "Email ještě není potvrzený. Zkontroluj si schránku (i spam) a klikni na odkaz v emailu."
+          );
+        }
+
         return {
           id: user.id,
           name: user.name,
