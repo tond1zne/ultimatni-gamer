@@ -6,7 +6,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { startWeek as startWeekLib, closeActiveWeekNow } from "@/lib/week";
 import { setAdminNotifications } from "@/lib/settings";
-import type { ActionResult } from "@/actions/auth";
 import { Category, Difficulty } from "@prisma/client";
 
 async function requireAdmin() {
@@ -17,7 +16,7 @@ async function requireAdmin() {
   return session;
 }
 
-export async function approveSubmission(formData: FormData): Promise<ActionResult> {
+export async function approveSubmission(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
@@ -46,7 +45,7 @@ export async function approveSubmission(formData: FormData): Promise<ActionResul
   return { ok: true };
 }
 
-export async function rejectSubmission(formData: FormData): Promise<ActionResult> {
+export async function rejectSubmission(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
@@ -91,11 +90,9 @@ export async function createChallenge(formData: FormData): Promise<void> {
   revalidatePath("/admin/challenges");
   revalidatePath("/challenges");
   revalidatePath("/");
-
-  // ❌ žádný return { ok: true }
 }
 
-export async function toggleArchiveChallenge(formData: FormData): Promise<ActionResult> {
+export async function toggleArchiveChallenge(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const challengeId = String(formData.get("challengeId") || "");
@@ -114,7 +111,7 @@ export async function toggleArchiveChallenge(formData: FormData): Promise<Action
   return { ok: true };
 }
 
-export async function startWeek(formData: FormData): Promise<ActionResult> {
+export async function startWeek(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const weekId = String(formData.get("weekId") || "");
@@ -139,7 +136,7 @@ export async function startWeek(formData: FormData): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function closeWeek(): Promise<ActionResult> {
+export async function closeWeek(): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
   await closeActiveWeekNow();
 
@@ -150,7 +147,7 @@ export async function closeWeek(): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function toggleAdminNotifications(formData: FormData): Promise<ActionResult> {
+export async function toggleAdminNotifications(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const enabled = String(formData.get("enabled") || "") === "true";
