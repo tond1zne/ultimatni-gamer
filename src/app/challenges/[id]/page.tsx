@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentWeek, getChallengeLeaderboard } from "@/lib/week";
+import { getWeekState, getChallengeLeaderboard } from "@/lib/week";
 import PointBurst from "@/components/PointBurst";
 import SubmitProofForm from "@/components/SubmitProofForm";
 
@@ -27,17 +27,17 @@ export default async function ChallengeDetailPage({ params }: { params: { id: st
   if (!challenge) notFound();
 
   const session = await getServerSession(authOptions);
-  const week = await getCurrentWeek();
+  const { active } = await getWeekState();
   const leaderboard = await getChallengeLeaderboard(challenge.id);
 
   let mySubmission = null;
-  if (session?.user) {
+  if (session?.user && active) {
     mySubmission = await prisma.submission.findUnique({
       where: {
         userId_challengeId_weekId: {
           userId: session.user.id,
           challengeId: challenge.id,
-          weekId: week.id,
+          weekId: active.id,
         },
       },
     });
@@ -76,6 +76,10 @@ export default async function ChallengeDetailPage({ params }: { params: { id: st
             </Link>
             .
           </div>
+        ) : !active ? (
+          <div className="comic-panel p-5 font-mono text-sm">
+            Týden ještě nebyl spuštěn adminem. Zkus to znovu, jakmile začne.
+          </div>
         ) : mySubmission ? (
           <div className="comic-panel p-5 flex flex-col gap-2">
             <span className="tag tag-filled w-fit">{STATUS_LABEL[mySubmission.status]}</span>
@@ -87,7 +91,7 @@ export default async function ChallengeDetailPage({ params }: { params: { id: st
               <p className="font-mono text-sm text-steel">Poznámka admina: {mySubmission.reviewNote}</p>
             )}
             <p className="font-mono text-[11px] text-steel mt-2">
-              Tuto výzvu jsi v tomto týdnu (#{week.number}) už odeslal/a.
+              Tuto výzvu jsi v tomto týdnu (#{active.number}) už odeslal/a.
             </p>
           </div>
         ) : (
