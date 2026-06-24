@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentWeek, getLeaderboard } from "@/lib/week";
+import { getWeekState, getLeaderboard } from "@/lib/week";
 
 export const dynamic = "force-dynamic";
 
@@ -10,13 +10,20 @@ type Props = {
 
 export default async function LeaderboardPage({ searchParams }: Props) {
   const mode = searchParams.obdobi === "all" ? "all" : "week";
-  const currentWeek = await getCurrentWeek();
+  const { active } = await getWeekState();
 
-  const weeks = await prisma.week.findMany({ orderBy: { number: "desc" } });
-  const selectedWeekId = searchParams.tyden || currentWeek.id;
-  const selectedWeek = weeks.find((w) => w.id === selectedWeekId) ?? currentWeek;
+  const weeks = await prisma.week.findMany({
+    where: { status: { in: ["ACTIVE", "CLOSED"] } },
+    orderBy: { number: "desc" },
+  });
 
-  const leaderboard = await getLeaderboard(mode === "all" ? null : selectedWeek.id);
+  const fallbackWeek = active ?? weeks[0] ?? null;
+  const selectedWeekId = searchParams.tyden || fallbackWeek?.id;
+  const selectedWeek = weeks.find((w) => w.id === selectedWeekId) ?? fallbackWeek;
+
+  const leaderboard = selectedWeek
+    ? await getLeaderboard(mode === "all" ? null : selectedWeek.id)
+    : [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -24,7 +31,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
         <h1 className="font-display text-3xl sm:text-4xl uppercase">Žebříček</h1>
         <p className="font-mono text-xs text-steel max-w-xl">
           Body se počítají jen ze schválených výzev. Týdenní žebříček se uzavírá vždy po vypršení
-          časovače.
+          časovače (nebo když ho admin uzavře dřív).
         </p>
       </div>
 
@@ -37,14 +44,14 @@ export default async function LeaderboardPage({ searchParams }: Props) {
         </Link>
       </div>
 
-      {mode === "week" && (
+      {mode === "week" && selectedWeek && (
         <form action="/leaderboard" className="flex items-center gap-2">
           <input type="hidden" name="obdobi" value="week" />
           <label className="font-mono text-xs uppercase tracking-widest text-steel">Týden:</label>
           <select name="tyden" defaultValue={selectedWeek.id} className="input-comic w-auto">
             {weeks.map((w) => (
               <option key={w.id} value={w.id}>
-                #{w.number} {w.isActive ? "(aktivní)" : ""}
+                #{w.number} {w.status === "ACTIVE" ? "(aktivní)" : ""}
               </option>
             ))}
           </select>
@@ -55,7 +62,11 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       )}
 
       <div className="comic-panel">
-        {leaderboard.length === 0 ? (
+        {!selectedWeek ? (
+          <p className="font-mono text-sm text-steel p-5">
+            Ještě neproběhl žádný týden. Žebříček se objeví, jakmile admin spustí první týden.
+          </p>
+        ) : leaderboard.length === 0 ? (
           <p className="font-mono text-sm text-steel p-5">Zatím žádné schválené body.</p>
         ) : (
           <table className="w-full">
