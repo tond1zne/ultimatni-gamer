@@ -1,27 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentWeek, getLeaderboard } from "@/lib/week";
+import { getWeekState, getLeaderboard } from "@/lib/week";
 import Countdown from "@/components/Countdown";
 import ChallengeCard from "@/components/ChallengeCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const week = await getCurrentWeek();
-
-if (!week) {
-  return (
-    <div className="p-6">
-      Žádný aktivní týden zatím neexistuje.
-    </div>
-  );
-}
+  const { active, pending } = await getWeekState();
+  const week = active ?? pending!;
   const challenges = await prisma.challenge.findMany({
     where: { isArchived: false },
     orderBy: { points: "desc" },
     take: 6,
   });
-  const leaderboard = (await getLeaderboard(week.id)).slice(0, 5);
+  const leaderboard = active ? (await getLeaderboard(active.id)).slice(0, 5) : [];
 
   return (
     <div className="flex flex-col gap-16">
@@ -29,17 +22,13 @@ if (!week) {
       <section className="comic-panel relative overflow-hidden px-6 sm:px-10 py-12 sm:py-16">
         <div className="halftone-dim absolute inset-0 pointer-events-none" />
         <div className="relative flex flex-col gap-6">
-          <span className="tag tag-filled w-fit">TYDEN #{week.number}</span>
+          <span className="tag tag-filled w-fit">
+            TYDEN #{week.number} {active ? "" : "· ČEKÁ SE NA START"}
+          </span>
           <h1 className="font-display text-4xl sm:text-6xl uppercase leading-[0.95] max-w-3xl">
             Splň výzvu.
             <br />
-            <br />
-            <br />
-            <br />
             Natoč důkaz.
-            <br />
-            <br />
-            <br />
             <br />
             Sbírej body.
           </h1>
@@ -49,12 +38,20 @@ if (!week) {
           </p>
 
           <div className="flex flex-col sm:flex-row sm:items-end gap-6 mt-2">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-widest text-steel mb-2">
-                Tento týden končí za
-              </p>
-              <Countdown endsAt={week.endsAt.toISOString()} />
-            </div>
+            {active ? (
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-widest text-steel mb-2">
+                  Tento týden končí za
+                </p>
+                <Countdown endsAt={active.endsAt!.toISOString()} />
+              </div>
+            ) : (
+              <div className="comic-panel-tight px-4 py-3">
+                <p className="font-mono text-xs uppercase tracking-widest">
+                  Časovač ještě neběží – admin výzvy brzy spustí
+                </p>
+              </div>
+            )}
             <Link href="/challenges" className="btn-comic w-fit">
               Zobrazit výzvy
             </Link>
@@ -100,7 +97,11 @@ if (!week) {
         </div>
 
         <div className="comic-panel">
-          {leaderboard.length === 0 ? (
+          {!active ? (
+            <p className="font-mono text-sm text-steel p-5">
+              Týden ještě nebyl spuštěn, žebříček se objeví, jakmile začne.
+            </p>
+          ) : leaderboard.length === 0 ? (
             <p className="font-mono text-sm text-steel p-5">
               Ještě nikdo nemá schválené body. Buď první.
             </p>
