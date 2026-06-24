@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerUser } from "@/actions/auth";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,27 +17,30 @@ export default function RegisterPage() {
     const form = new FormData(e.currentTarget);
     const result = await registerUser(form);
 
-    if (!result.ok) {
-      setError(result.error);
-      setLoading(false);
-      return;
-    }
-
-    const res = await signIn("credentials", {
-      email: form.get("email"),
-      password: form.get("password"),
-      redirect: false,
-    });
-
     setLoading(false);
 
-    if (res?.error) {
-      setError("Ucet vytvoren, ale prihlaseni se nezdarilo. Zkus se prihlasit rucne.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    setDone(true);
+  }
+
+  if (done) {
+    return (
+      <div className="max-w-md mx-auto comic-panel p-8 flex flex-col gap-4">
+        <span className="tag tag-filled w-fit">JEŠTĚ JEDEN KROK</span>
+        <h1 className="font-display text-2xl uppercase">Zkontroluj email</h1>
+        <p className="font-mono text-sm text-steel">
+          Poslali jsme ti potvrzovací odkaz. Klikni na něj a pak se budeš moct přihlásit.
+          Nezapomeň zkontrolovat i složku spam.
+        </p>
+        <Link href="/login" className="btn-comic w-fit mt-2">
+          Přejít na přihlášení
+        </Link>
+      </div>
+    );
   }
 
   return (
