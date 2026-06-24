@@ -70,7 +70,7 @@ export async function rejectSubmission(formData: FormData): Promise<ActionResult
   return { ok: true };
 }
 
-export async function createChallenge(formData: FormData): Promise<ActionResult> {
+export async function createChallenge(formData: FormData): Promise<void> {
   await requireAdmin();
 
   const title = String(formData.get("title") || "").trim();
@@ -79,15 +79,10 @@ export async function createChallenge(formData: FormData): Promise<ActionResult>
   const difficulty = String(formData.get("difficulty") || "") as Difficulty;
   const points = Number(formData.get("points") || 0);
 
-  if (!title) return { ok: false, error: "Zadej nazev vyzvy." };
-  if (!description) return { ok: false, error: "Zadej popis vyzvy." };
-  if (!["GAME", "IRL"].includes(category)) return { ok: false, error: "Vyber kategorii." };
-  if (!["EASY", "MEDIUM", "HARD", "INSANE"].includes(difficulty)) {
-    return { ok: false, error: "Vyber obtiznost." };
-  }
-  if (!Number.isFinite(points) || points <= 0) {
-    return { ok: false, error: "Body musi byt kladne cislo." };
-  }
+  if (!title || !description) return;
+  if (!["GAME", "IRL"].includes(category)) return;
+  if (!["EASY", "MEDIUM", "HARD", "INSANE"].includes(difficulty)) return;
+  if (!Number.isFinite(points) || points <= 0) return;
 
   await prisma.challenge.create({
     data: { title, description, category, difficulty, points: Math.round(points) },
@@ -97,7 +92,7 @@ export async function createChallenge(formData: FormData): Promise<ActionResult>
   revalidatePath("/challenges");
   revalidatePath("/");
 
-  return { ok: true };
+  // ❌ žádný return { ok: true }
 }
 
 export async function toggleArchiveChallenge(formData: FormData): Promise<ActionResult> {
