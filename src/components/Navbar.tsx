@@ -20,6 +20,9 @@ export default async function Navbar() {
           <Link href="/leaderboard" className="hover:underline">
             Zebricek
           </Link>
+          <Link href="/team" className="hover:underline">
+            Náš tým
+          </Link>
           {session?.user && (
             <Link href="/profile" className="hover:underline">
               Profil
