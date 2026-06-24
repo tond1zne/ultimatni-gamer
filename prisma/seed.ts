@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  // --- admin ucet ---
+  // --- admin ucet (rovnou s potvrzenym emailem, aby se mohl hned prihlasit) ---
   const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@streamer.gg";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD || "admin123";
 
@@ -16,20 +16,26 @@ async function main() {
         email: adminEmail,
         password: await bcrypt.hash(adminPassword, 10),
         role: "ADMIN",
+        emailVerified: new Date(),
       },
     });
     console.log(`Admin ucet vytvoren: ${adminEmail} / ${adminPassword} (zmen si heslo!)`);
   }
 
-  // --- prvni tyden ---
-  const activeWeek = await prisma.week.findFirst({ where: { isActive: true } });
-  if (!activeWeek) {
-    const now = new Date();
-    const endsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // --- globalni nastaveni ---
+  await prisma.appSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton", notifyAdminOnSubmission: true },
+    update: {},
+  });
+
+  // --- prvni tyden (cekajici, admin ho rucne spusti v /admin/week) ---
+  const anyWeek = await prisma.week.findFirst();
+  if (!anyWeek) {
     await prisma.week.create({
-      data: { number: 1, startsAt: now, endsAt, isActive: true },
+      data: { number: 1, status: "PENDING" },
     });
-    console.log("Tyden #1 vytvoren.");
+    console.log("Tyden #1 vytvoren jako 'pending' - spust ho v /admin/week.");
   }
 
   // --- ukazkove vyzvy ---
