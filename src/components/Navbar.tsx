@@ -8,6 +8,9 @@ export default async function Navbar() {
 
   return (
     <header className="border-b-[3px] border-ink bg-paper sticky top-0 z-50">
+    <header>
+      <link rel="icon" type="image/png" href="fd825cb4-7d9a-49a1-aa51-b6659abba1b6.png">
+    </header>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         <Link href="/" className="font-display text-xl sm:text-2xl tracking-tight uppercase">
           TOND1ZNE<span className="border-b-4 border-ink">ULTIMÁTNÍGAMER</span>
