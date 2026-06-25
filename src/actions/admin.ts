@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { startWeek as startWeekLib, closeActiveWeekNow } from "@/lib/week";
 import { setAdminNotifications } from "@/lib/settings";
+import type { ActionResult } from "@/actions/auth";
 import { Category, Difficulty } from "@prisma/client";
 
 async function requireAdmin() {
@@ -16,7 +17,7 @@ async function requireAdmin() {
   return session;
 }
 
-export async function approveSubmission(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function approveSubmission(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
@@ -45,7 +46,7 @@ export async function approveSubmission(formData: FormData): Promise<{ ok: boole
   return { ok: true };
 }
 
-export async function rejectSubmission(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function rejectSubmission(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const submissionId = String(formData.get("submissionId") || "");
@@ -69,7 +70,7 @@ export async function rejectSubmission(formData: FormData): Promise<{ ok: boolea
   return { ok: true };
 }
 
-export async function createChallenge(formData: FormData): Promise<void> {
+export async function createChallenge(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const title = String(formData.get("title") || "").trim();
@@ -78,10 +79,15 @@ export async function createChallenge(formData: FormData): Promise<void> {
   const difficulty = String(formData.get("difficulty") || "") as Difficulty;
   const points = Number(formData.get("points") || 0);
 
-  if (!title || !description) return;
-  if (!["GAME", "IRL"].includes(category)) return;
-  if (!["EASY", "MEDIUM", "HARD", "INSANE"].includes(difficulty)) return;
-  if (!Number.isFinite(points) || points <= 0) return;
+  if (!title) return { ok: false, error: "Zadej nazev vyzvy." };
+  if (!description) return { ok: false, error: "Zadej popis vyzvy." };
+  if (!["GAME", "IRL"].includes(category)) return { ok: false, error: "Vyber kategorii." };
+  if (!["EASY", "MEDIUM", "HARD", "INSANE"].includes(difficulty)) {
+    return { ok: false, error: "Vyber obtiznost." };
+  }
+  if (!Number.isFinite(points) || points <= 0) {
+    return { ok: false, error: "Body musi byt kladne cislo." };
+  }
 
   await prisma.challenge.create({
     data: { title, description, category, difficulty, points: Math.round(points) },
@@ -90,9 +96,11 @@ export async function createChallenge(formData: FormData): Promise<void> {
   revalidatePath("/admin/challenges");
   revalidatePath("/challenges");
   revalidatePath("/");
+
+  return { ok: true };
 }
 
-export async function toggleArchiveChallenge(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function toggleArchiveChallenge(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const challengeId = String(formData.get("challengeId") || "");
@@ -111,7 +119,7 @@ export async function toggleArchiveChallenge(formData: FormData): Promise<{ ok: 
   return { ok: true };
 }
 
-export async function startWeek(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function startWeek(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const weekId = String(formData.get("weekId") || "");
@@ -136,7 +144,7 @@ export async function startWeek(formData: FormData): Promise<{ ok: boolean; erro
   return { ok: true };
 }
 
-export async function closeWeek(): Promise<{ ok: boolean; error?: string }> {
+export async function closeWeek(): Promise<ActionResult> {
   await requireAdmin();
   await closeActiveWeekNow();
 
@@ -147,7 +155,7 @@ export async function closeWeek(): Promise<{ ok: boolean; error?: string }> {
   return { ok: true };
 }
 
-export async function toggleAdminNotifications(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function toggleAdminNotifications(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
   const enabled = String(formData.get("enabled") || "") === "true";

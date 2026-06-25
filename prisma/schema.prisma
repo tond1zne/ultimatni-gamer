@@ -1,11 +1,15 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // rhel-openssl-3.0.x = Vercel serverless funkce (Node 18+ runtime)
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  // Pro produkci muzes zmenit na "postgresql" a upravit DATABASE_URL
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // DATABASE_URL = pooled spojeni (pres PgBouncer/Neon pooler) - pouziva appka v provozu
+  url       = env("DATABASE_URL")
+  // DIRECT_URL = primy (nepoolovany) spojeni - pouziva Prisma jen pro migrace/db push
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {

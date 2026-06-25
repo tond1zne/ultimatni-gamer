@@ -1,5 +1,5 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
-// NOTE: This file should not be edited
-// see https://nextjs.org/docs/app/building-your-application/configuring/typescript for more information.
+// NOTE: tento soubor se normálně generuje automaticky příkazem `next dev` / `next build`.
+// Pokud ho Next.js přepíše, je to v pořádku.
