@@ -4,7 +4,7 @@ type Member = {
 };
 
 // --- TADY UPRAV JMENA A CESTY K FOTKAM ---
-const OWNER: Member = { name: "Jméno Příjmení", photo: "/team/owner.jpg" };
+const OWNER: Member = { name: "tond1zne", photo: "/team/thatsme-removebg-preview.png" };
 
 const ADMINS: Member[] = [
   { name: "Jméno Příjmení", photo: "/team/admin1.jpg" },
